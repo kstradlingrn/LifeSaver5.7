@@ -105,5 +105,5 @@ function tickPracticeAED(dt){
  if(!live?.withAED)return;
  if(live.aedPhase==='cpr'){live.aedCPR+=dt;if(live.aedCPR>=120&&(!live.limit||live.elapsed+1<live.limit)){
  live.aedPending=true;live.aedPhase=live.aedCycles?'clearAnalysis':'on';logAED(live.aedCycles?'AED requests reassessment':'AED arrives after initial CPR practice interval');renderPracticeAED();speak(live.aedCycles?'Continue until ready, then follow AED instructions. Everyone clear for analysis.':'A helper brings an AED. Keep compressing while the helper turns it on and applies pads.');}}
- if(live.aedPhase==='analyzing'&&performance.now()>=live.aedAnalyzeEnd){if(live.aedCycles%2===0){live.aedPhase='clearShock';logAED('AED advises shock');$('pace').textContent='Hands off · shock advised';renderPracticeAED();speak('Shock advised. Make sure everyone is clear.');}else resumePracticeCPR('No shock advised. Resume CPR now, starting with compressions.');}
+ if(live.aedPhase==='analyzing'&&performance.now()>=live.aedAnalyzeEnd&&!speechBusy()){if(live.aedCycles%2===0){live.aedPhase='clearShock';logAED('AED advises shock');$('pace').textContent='Hands off · shock advised';renderPracticeAED();speak('Shock advised. Make sure everyone is clear.');}else resumePracticeCPR('No shock advised. Resume CPR now, starting with compressions.');}
 }

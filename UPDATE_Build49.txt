@@ -1,0 +1,9 @@
+LifeSaver Build 49 — November 4, 2026
+
+Replaces synthetic CPR/AED coaching with 25 direct instructor-recorded prompts, selected from two takes, plus a separate phone-placement recording. Restarts and extraneous spoken material were removed. The practice introduction includes the separate corrected placement recording; its setup page also offers a replay button and matching written directions.
+
+Recorded coaching respects Voice, Silence, AED-in-use, session stop, navigation and background controls. Coaching waits while recorded speech is playing. AED analysis waits until its spoken hands-off instruction ends. Audio failures show a message and retain written guidance without reverting live CPR prompts to synthetic speech. Unrecorded written quiz reading retains the existing device voice.
+
+Preserves the existing public address and application data key. The offline cache includes all 26 MP3s and the new voice player. Donation settings are unchanged.
+
+Validation: all MP3s decoded with FFmpeg, JS syntax checks, 37 actual-script checks for prompt mapping, playback lifecycle, cancellation, external AED mute, quiz fallback, and offline asset coverage. No physical iPhone/speaker or manikin test; browser installation was unavailable. Camera/rate algorithms and clinical/reference content were not modified.
