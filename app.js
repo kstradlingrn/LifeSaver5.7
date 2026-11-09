@@ -12,7 +12,7 @@ function navigate(p){if(page!==p)stopSpeech();if(live&&p!=='live'){stopLive(fals
 function openPractice(bank){if(bank!=='BLS')return;practiceBank='BLS';$('quizBank').replaceChildren();text($('quizBank'),'option','BLS').value='BLS';$('quizBank').disabled=true;$('scenarioCategory').replaceChildren();text($('scenarioCategory'),'option','BLS').value='BLS';$('scenarioCategory').disabled=true;renderSection();navigate('sectionMenu');}
 function renderSection(){$('sectionLabel').textContent='BLS PRACTICE';$('sectionTitle').textContent='BLS Practice';$('sectionDescription').textContent='Basic life support practice. Baby and child topics appear only in written questions; simulations use adults.';const n=SCENARIOS.filter(c=>c.category==='BLS').length;$('sectionScenarioDescription').textContent=`${n} adult decision scenarios. Practice physical CPR and AED skills separately in hands-on practice.`;$('sectionQuizDescription').textContent=`${BANKS.BLS?.length||96} BLS questions with immediate feedback and adaptive review.`;$('quizSetupTitle').textContent='BLS written practice';$('scenarioPickerTitle').textContent='BLS scenarios';$('progressTitle').textContent='BLS learning record';}
 function sessionBank(s){return s.bank||(s.type==='scenario'?(s.category==='BLS'?'BLS':'archived'):'BLS');}
-function stopSpeech(){LifeSaverVoice.cancel();}
+function stopSpeech(){LifeSaverVoice.cancel();const placement=$('placementInstructionsAudio');if(placement){placement.pause();try{placement.currentTime=0;}catch{}}}
 function speechBusy(){return LifeSaverVoice.speaking||!!window.speechSynthesis?.speaking;}
 function speak(s,force=false){
  if(live&&$('externalAED').checked)return;
@@ -129,3 +129,11 @@ $('clearPatient').onchange=()=>{if(!caseRun)return;caseRun.clearForShock=$('clea
 $('phonePlacementAudio').onclick=()=>speak(LifeSaverVoice.prompts.find(([id])=>id==='phone')[1],true);
 
 $('testVoice').onclick=()=>{if(live)$('voiceEnabled').checked=true;speak(LifeSaverVoice.prompts[0][1],true);};
+
+// Phone placement: readable steps, zoomable reference and recorded narration.
+$('playPlacementInstructions').onclick=()=>{stopSpeech();const player=$('placementInstructionsAudio');player.play().catch(()=>{$('placementAudioStatus').textContent='Tap Play in the audio player to hear the instructions.';});};
+$('placementInstructionsAudio').onplay=()=>{$('placementAudioStatus').textContent='Recorded phone placement instructions playing.';};
+$('placementInstructionsAudio').onended=()=>{$('placementAudioStatus').textContent='Instructions finished. Tap Hear instructions to replay.';};
+$('placementInstructionsAudio').onerror=()=>{$('placementAudioStatus').textContent='Recording could not load. Reconnect and try again; the written instructions remain available.';};
+$('enlargePlacementImage').onclick=()=>{$('placementImageViewport').classList.add('enlarged');$('enlargePlacementImage').setAttribute('aria-expanded','true');$('placementImageHint').textContent='Image enlarged. Scroll sideways across the picture to read all labels.';};
+$('fitPlacementImage').onclick=()=>{$('placementImageViewport').classList.remove('enlarged');$('enlargePlacementImage').setAttribute('aria-expanded','false');$('placementImageViewport').scrollLeft=0;$('placementImageHint').textContent='Image fitted to the screen. Tap Enlarge image for larger labels.';};

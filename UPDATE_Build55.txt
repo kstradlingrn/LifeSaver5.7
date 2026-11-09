@@ -1,0 +1,9 @@
+Build 55 — phone placement and selected instructor recordings
+
+Home screen: Phone placement button opens large written instructions, the provided original image, image enlarge/fit controls, and recorded instructions with accessible audio controls. Full-size image is available separately. Written guidance clarifies that the screen faces up and the camera end is nearest the manikin’s own left shoulder. Narration stops when leaving the page.
+
+Selected Bill recordings for core prompts, retaining Kate for shock delivered (15), the separate phone-placement recording, and the specific placement passage in the practice introduction. Both slow-down cues use the complete page 4 recording. Spoken personal introduction removed. Audio levels matched; boundary fades applied without changing speaking speed. New MP3s omit optional metadata tags.
+
+Local verification: all 26 recordings decoded and checked with speech recognition; selected takes compared against current prompts. Prompt playback/cancellation logic passed, all 77 offline cache assets available, no duplicate element IDs, and script syntax passed. Live verification follows publishing.
+
+Recording follow-up remains: the full depth sentence needs a new take including “avoiding more than two point four inches.”
