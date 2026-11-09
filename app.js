@@ -14,7 +14,21 @@ function renderSection(){$('sectionLabel').textContent='BLS PRACTICE';$('section
 function sessionBank(s){return s.bank||(s.type==='scenario'?(s.category==='BLS'?'BLS':'archived'):'BLS');}
 function stopSpeech(){LifeSaverVoice.cancel();}
 function speechBusy(){return LifeSaverVoice.speaking||!!window.speechSynthesis?.speaking;}
-function speak(s,force=false){if(live&&$('externalAED').checked)return;if(live&&!$('voiceEnabled').checked&&!force)return;if(LifeSaverVoice.play(s))return;stopSpeech();if(live)return;if(!('speechSynthesis'in window))return;const u=new SpeechSynthesisUtterance(s);u.rate=.98;u.volume=1;const voices=speechSynthesis.getVoices();u.voice=voices.find(v=>v.lang==='en-US'&&/Samantha|Google US English|Daniel/i.test(v.name))||voices.find(v=>v.lang.startsWith('en'))||null;speechSynthesis.speak(u);}
+let currentUtterance=null;
+function speak(s,force=false){
+ if(live&&$('externalAED').checked)return;
+ if(live&&!$('voiceEnabled').checked&&!force)return;
+ stopSpeech();
+ if(!window.speechSynthesis){toast('Device speech is unavailable in this browser.');return;}
+ try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch{}
+ const u=currentUtterance=new SpeechSynthesisUtterance(s);u.lang='en-US';u.rate=.98;u.volume=1;
+ const voices=speechSynthesis.getVoices();
+ u.voice=voices.find(v=>v.lang==='en-US'&&/Samantha|Google US English|Daniel/i.test(v.name))||voices.find(v=>v.lang.startsWith('en'))||null;
+ u.onstart=()=>{$('voiceStatus').textContent='Device voice playing';};
+ u.onend=()=>{if(currentUtterance===u){currentUtterance=null;$('voiceStatus').textContent='Device voice ready · tap Test voice to replay';}};
+ u.onerror=()=>{if(currentUtterance===u){currentUtterance=null;$('voiceStatus').textContent='Tap Test voice to retry. Check media volume.';}};
+ speechSynthesis.resume();speechSynthesis.speak(u);
+}
 // Schedule independently of camera/UI work. Audio must be unlocked by a tap on iOS.
 let beatClock=0;const beatNodes=new Set();
 function beatAllowed(){return !document.hidden&&$('beatEnabled').checked&&(page==='practicalSetup'||(live?(!live.paused&&!live.aedHandsOff&&!$('externalAED').checked):page==='scenario'&&!!caseRun?.cpr));}
@@ -122,3 +136,5 @@ loadContent();
 $('clearPatient').onchange=()=>{if(!caseRun)return;caseRun.clearForShock=$('clearPatient').checked;renderCPRVisual(caseRun);};
 
 $('phonePlacementAudio').onclick=()=>speak(LifeSaverVoice.prompts.find(([id])=>id==='phone')[1],true);
+
+$('testVoice').onclick=()=>{if(live)$('voiceEnabled').checked=true;speak(LifeSaverVoice.prompts[0][1],true);};
