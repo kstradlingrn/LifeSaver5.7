@@ -1,5 +1,5 @@
 'use strict';
-// Direct playback of the instructor's own recordings; no generated voice.
+// Direct playback of selected instructor recordings.
 const LifeSaverVoice = (() => {
  const normalize = s => s.toLowerCase().replace(/[’‘]/g,"'").replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
  const prompts = [
@@ -30,7 +30,7 @@ const LifeSaverVoice = (() => {
  ['25','Your compression rate is good. Keep going—you are helping save this person’s life.'],
  ['phone','Put your phone flat on the floor at the manikin’s left shoulder, screen facing up with the camera end closest to the shoulder.']
  ];
- const files = new Map(prompts.map(([id,s])=>[normalize(s),`instructor-voice-${id}.mp3`]));
+ const files = new Map(prompts.map(([id,s])=>[normalize(s),`instructor-voice-${id}.mp3?v=54`]));
  const player=document.getElementById('coachAudio');
  const buffers=new WeakMap();
  let active=false,generation=0,source=null,utterance=null;

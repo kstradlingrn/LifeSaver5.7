@@ -1,0 +1,12 @@
+Build 54 — selected instructor recordings
+
+Audio check: Bill; spoken name removed.
+Adult CPR introduction: Bill, with Kate retained for the final beat/recoil sentence.
+Training introduction: Bill, with Kate retained for the specific phone-placement instruction.
+Other prompts and the separate phone-placement recording: existing Kate recordings retained because Bill’s file covers only the first three prompts.
+
+Long gaps reduced at sentence boundaries. Natural speaking speed preserved. Source levels matched; short boundary fades applied. Optional MP3 metadata omitted from the three new files. Existing URL and QR destination preserved.
+
+Verification: new files decoded and transcribed after editing; all 26 prompt files checked for decodability. Browser playback and deployed-file verification recorded separately after publishing.
+
+Recording follow-up: neither CPR introduction includes the script’s upper-depth phrase “avoiding more than two point four inches.” Retained the existing instruction meaning. Record a complete replacement depth sentence for a future update.
