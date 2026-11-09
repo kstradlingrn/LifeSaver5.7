@@ -31,37 +31,56 @@ const LifeSaverVoice = (() => {
  ['phone','Put your phone flat on the floor at the manikin’s left shoulder, screen facing up with the camera end closest to the shoulder.']
  ];
  const files = new Map(prompts.map(([id,s])=>[normalize(s),`instructor-voice-${id}.mp3`]));
- const player = new Audio(); player.preload='auto'; player.volume=1;
- player.setAttribute('playsinline','');
- let active=false, generation=0, watchdog=0;
- function status(message){const el=document.getElementById('voiceStatus');if(el)el.textContent=message;}
- function cancel(){generation++;active=false;clearTimeout(watchdog);player.onended=player.onerror=player.onplaying=null;player.pause();try{player.currentTime=0;}catch{}window.speechSynthesis?.cancel();}
- function fallback(s,token){
-  if(token!==generation)return;
-  clearTimeout(watchdog);player.onended=player.onerror=player.onplaying=null;player.pause();
-  if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){active=false;status('Audio unavailable. Tap Test voice again and check media volume.');return;}
-  const u=new SpeechSynthesisUtterance(s);u.lang='en-US';u.rate=.98;u.volume=1;
-  const voices=speechSynthesis.getVoices();
-  u.voice=voices.find(v=>v.lang==='en-US'&&/Samantha|Google US English|Daniel/i.test(v.name))||voices.find(v=>v.lang.startsWith('en'))||null;
-  u.onstart=()=>{if(token===generation)status('Device voice playing · instructor recording unavailable');};
-  u.onend=()=>{if(token===generation)active=false;};
-  u.onerror=()=>{if(token===generation){active=false;status('Tap Test voice to enable sound. Check your phone’s media volume.');}};
-  try{speechSynthesis.speak(u);}catch{active=false;status('Tap Test voice again to enable sound.');}
+ const player=document.getElementById('coachAudio');
+ const buffers=new WeakMap();
+ let active=false,generation=0,source=null,utterance=null;
+ function status(s){const e=document.getElementById('voiceStatus');if(e)e.textContent=s;}
+ function cancel(){
+  generation++;active=false;
+  if(source){source.onended=null;try{source.stop();}catch{}source.disconnect();source=null;}
+  player.pause();player.onended=player.onerror=null;try{player.currentTime=0;}catch{}
+  window.speechSynthesis?.cancel();utterance=null;
  }
- function play(s){
-  cancel();const token=generation;active=true;
-  try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch{}
-  const file=files.get(normalize(s));
-  if(!file){fallback(s,token);return true;}
-  player.src=new URL(file,document.baseURI).href;
-  let started=false, failed=false;
-  const fail=()=>{if(!failed&&token===generation){failed=true;fallback(s,token);}};
-  player.onplaying=()=>{if(token===generation){started=true;clearTimeout(watchdog);status('Instructor recording playing');}};
-  player.onended=()=>{if(token===generation){active=false;clearTimeout(watchdog);status('Instructor recording finished · tap Test voice to replay');}};
-  player.onerror=fail;
-  watchdog=setTimeout(()=>{if(!started)fail();},4000);
-  try{const result=player.play();result?.catch(fail);}catch{fail();}
+ function bufferFor(context,file){
+  let map=buffers.get(context);if(!map){map=new Map();buffers.set(context,map);}
+  if(!map.has(file)){
+   const pending=fetch(new URL(file,document.baseURI)).then(r=>{if(!r.ok)throw Error('Audio file unavailable');return r.arrayBuffer();}).then(bytes=>context.decodeAudioData(bytes));
+   map.set(file,pending);pending.catch(()=>{if(map.get(file)===pending)map.delete(file);});
+  }
+  return map.get(file);
+ }
+ function deviceVoice(s,token){
+  if(!window.speechSynthesis){active=false;status('No recording for this prompt. Follow the displayed text.');return false;}
+  utterance=new SpeechSynthesisUtterance(s);utterance.lang='en-US';utterance.rate=.98;utterance.volume=1;
+  utterance.onend=()=>{if(token===generation)active=false;};
+  utterance.onerror=()=>{if(token===generation){active=false;status('Device voice unavailable for this prompt. Follow the displayed text.');}};
+  speechSynthesis.speak(utterance);return true;
+ }
+ function play(s,context){
+  cancel();const token=generation;const file=files.get(normalize(s));active=true;
+  if(!file)return deviceVoice(s,token);
+  player.src=new URL(file,document.baseURI).href;player.load();
+  if(context&&context.state!=='closed'){
+   const resumed=context.resume();
+   status('Loading spoken guidance…');
+   Promise.all([resumed,bufferFor(context,file)]).then(([,buffer])=>{
+    if(token!==generation)return;
+    if(context.state!=='running')throw Error('Audio channel paused');
+    const node=context.createBufferSource();node.buffer=buffer;node.connect(context.destination);source=node;
+    node.onended=()=>{node.disconnect();if(token===generation){source=null;active=false;status('Spoken guidance finished · tap Test voice to replay');}};
+    node.start();status('Recorded guidance playing · same audio channel as metronome');
+   }).catch(()=>{if(token===generation){active=false;status('Tap Play on the voice player below to hear guidance.');}});
+  }else{
+   player.onended=()=>{if(token===generation){active=false;status('Spoken guidance finished');}};
+   player.onerror=()=>{if(token===generation){active=false;status('Voice file could not load. Retry with a connection.');}};
+   try{player.play().then(()=>{if(token===generation)status('Recorded guidance playing');}).catch(()=>{if(token===generation){active=false;status('Tap Play on the voice player below.');}});}catch{active=false;}
+  }
   return true;
  }
+ player.addEventListener('play',()=>{
+  generation++;if(source){source.onended=null;try{source.stop();}catch{}source.disconnect();source=null;}
+  window.speechSynthesis?.cancel();active=true;status('Voice player playing');
+ });
+ player.addEventListener('ended',()=>{active=false;});
  return {play,cancel,get speaking(){return active;},files,prompts};
 })();

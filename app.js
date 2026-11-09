@@ -12,24 +12,13 @@ function navigate(p){if(page!==p)stopSpeech();if(live&&p!=='live'){stopLive(fals
 function openPractice(bank){if(bank!=='BLS')return;practiceBank='BLS';$('quizBank').replaceChildren();text($('quizBank'),'option','BLS').value='BLS';$('quizBank').disabled=true;$('scenarioCategory').replaceChildren();text($('scenarioCategory'),'option','BLS').value='BLS';$('scenarioCategory').disabled=true;renderSection();navigate('sectionMenu');}
 function renderSection(){$('sectionLabel').textContent='BLS PRACTICE';$('sectionTitle').textContent='BLS Practice';$('sectionDescription').textContent='Basic life support practice. Baby and child topics appear only in written questions; simulations use adults.';const n=SCENARIOS.filter(c=>c.category==='BLS').length;$('sectionScenarioDescription').textContent=`${n} adult decision scenarios. Practice physical CPR and AED skills separately in hands-on practice.`;$('sectionQuizDescription').textContent=`${BANKS.BLS?.length||96} BLS questions with immediate feedback and adaptive review.`;$('quizSetupTitle').textContent='BLS written practice';$('scenarioPickerTitle').textContent='BLS scenarios';$('progressTitle').textContent='BLS learning record';}
 function sessionBank(s){return s.bank||(s.type==='scenario'?(s.category==='BLS'?'BLS':'archived'):'BLS');}
-function stopSpeech(){clearTimeout(speechWatchdog);LifeSaverVoice.cancel();}
+function stopSpeech(){LifeSaverVoice.cancel();}
 function speechBusy(){return LifeSaverVoice.speaking||!!window.speechSynthesis?.speaking;}
-let currentUtterance=null,speechWatchdog=0;
 function speak(s,force=false){
  if(live&&$('externalAED').checked)return;
  if(live&&!$('voiceEnabled').checked&&!force)return;
- stopSpeech();
- if(!window.speechSynthesis){LifeSaverVoice.play(s);return;}
- try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch{}
- const u=currentUtterance=new SpeechSynthesisUtterance(s);u.lang='en-US';u.rate=.98;u.volume=1;
- const voices=speechSynthesis.getVoices();
- u.voice=voices.find(v=>v.lang==='en-US'&&/Samantha|Google US English|Daniel/i.test(v.name))||voices.find(v=>v.lang.startsWith('en'))||null;
- u.onstart=()=>{clearTimeout(speechWatchdog);$('voiceStatus').textContent='Device voice playing';};
- u.onend=()=>{clearTimeout(speechWatchdog);if(currentUtterance===u){currentUtterance=null;$('voiceStatus').textContent='Device voice ready · tap Test voice to replay';}};
- const recordedBackup=()=>{if(currentUtterance===u){currentUtterance=null;clearTimeout(speechWatchdog);LifeSaverVoice.play(s);}};
- u.onerror=recordedBackup;
- speechWatchdog=setTimeout(recordedBackup,4000);
- speechSynthesis.resume();speechSynthesis.speak(u);
+ initAudio();
+ LifeSaverVoice.play(s,audio);
 }
 // Schedule independently of camera/UI work. Audio must be unlocked by a tap on iOS.
 let beatClock=0;const beatNodes=new Set();
