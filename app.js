@@ -121,8 +121,20 @@ $('autoRead').checked=progress.settings.autoRead;$('autoRead').onchange=()=>{pro
 $('exportProgress').onclick=()=>{const u=URL.createObjectURL(new Blob([JSON.stringify({format:key,progress},null,2)],{type:'application/json'})),a=document.createElement('a');a.href=u;a.download='LifeSaver-progress-and-review.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),2000);};$('importProgressBtn').onclick=()=>{$('importProgress').value='';$('importProgress').click();};
 $('importProgress').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const raw=JSON.parse(await f.text()),p=raw.progress;if(raw.format!==key||!p||!p.topics?.BLS||!Array.isArray(p.sessions)||!Array.isArray(p.flags)||p.sessions.some(s=>!['quiz','scenario','practical'].includes(s.type)||typeof s.date!=='string'))throw Error('Invalid LifeSaver backup.');if(!confirm('Replace your local learning progress with this backup?'))return;progress={...p,settings:{autoRead:false,...p.settings}};saveProgress();$('autoRead').checked=progress.settings.autoRead;renderProgress();toast('Backup imported.');}catch(e){toast(e.message);}};
 $('resetProgress').onclick=()=>{if(confirm('Reset all learning progress, saved summaries and review flags on this device?')){progress={topics:{BLS:{}},sessions:[],flags:[],settings:{autoRead:false}};saveProgress();renderProgress();$('autoRead').checked=false;}};
-async function loadContent(){try{[BANKS,SCENARIOS,SOURCES]=await Promise.all(['questions.json','scenarios.json','sources.json'].map(f=>fetch(f).then(r=>{if(!r.ok)throw Error('Content unavailable');return r.json();})));renderSourceReferences($('sourceLinks'));if(page==='scenarioPicker')renderScenarios();if(page==='sectionMenu')renderSection();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});}catch{toast('Practice content could not load. Emergency guidance is still available.');}}
+async function loadContent(){try{[BANKS,SCENARIOS,SOURCES]=await Promise.all(['questions.json','scenarios.json','sources.json'].map(f=>fetch(f).then(r=>{if(!r.ok)throw Error('Content unavailable');return r.json();})));renderSourceReferences($('sourceLinks'));if(page==='scenarioPicker')renderScenarios();if(page==='sectionMenu')renderSection();}catch{toast('Practice content could not load. Emergency guidance is still available.');}}
 loadContent();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+    .then(registration => {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          registration.update().catch(() => {});
+        }
+      });
+    })
+    .catch(() => {});
+}
 
 $('clearPatient').onchange=()=>{if(!caseRun)return;caseRun.clearForShock=$('clearPatient').checked;renderCPRVisual(caseRun);};
 
