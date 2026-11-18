@@ -1,6 +1,6 @@
 const scope = new URL(self.registration.scope);
 const cachePrefix = `lifesaver:${scope.pathname}:`;
-const cacheName = `${cachePrefix}56`;
+const cacheName = `${cachePrefix}57`;
 const assets = [
   'phone-placement.jpeg',
   'recorded-voice.js?v=55',
